@@ -1,0 +1,3 @@
+@interface VisionCameraPluginCapture : NSObject
+
+@end
