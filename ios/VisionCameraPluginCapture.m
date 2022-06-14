@@ -1,30 +1,42 @@
 #import "VisionCameraPluginCapture.h"
-#import "VCZBarcodeScanner.h"
+#import <VideoToolbox/VideoToolbox.h>
 #import <VisionCamera/Frame.h>
 #import <VisionCamera/FrameProcessorPlugin.h>
 
-static VCZBarcodeScanner *barCodeScanner = nil;
-
 @implementation VisionCameraPluginCapture
 
-+ (void)load {
-  // Initialzie class properties.
-  static dispatch_once_t onceToken;
-  dispatch_once(&onceToken, ^{
-    barCodeScanner = [[VCZBarcodeScanner alloc] init];
-  });
+static inline id captureVideoFrame(Frame *frame, NSArray *arguments) {
+  // Options
+  NSDictionary *options = arguments[0];
+  NSString *mediaFormat = options[@"format"] ? options[@"format"] : @"JPEG";
+  NSNumber *compressionQuality =
+      options[@"quality"] ? options[@"quality"] : @(0.5f);
 
-  // Register VisionCamera frame processor
-  [FrameProcessorPluginRegistry
-      addFrameProcessorPlugin:@"__detectBarcodes"
-                     callback:^id(Frame *frame, NSArray<id> *args) {
-                       id formats = args.count >= 1 ? args[0] : @[];
-                       id options = args.count >= 2 ? args[1] : @{};
+  // Capture video frame
+  CVPixelBufferRef pixelBuffer = CMSampleBufferGetImageBuffer(frame.buffer);
+  CGImageRef videoFrameImage = NULL;
 
-                       return [barCodeScanner detect:frame
-                                             formats:formats
-                                             options:options];
-                     }];
+  if (VTCreateCGImageFromCVPixelBuffer(pixelBuffer, NULL, &videoFrameImage) !=
+      errSecSuccess) {
+    return [NSNull null];
+  }
+
+  // Rasterize
+  UIImage *img = [UIImage imageWithCGImage:videoFrameImage];
+  NSData *bitmapRep =
+      [mediaFormat isEqualToString:@"JPEG"]
+          ? UIImageJPEGRepresentation(img, [compressionQuality floatValue])
+          : UIImagePNGRepresentation(img);
+  NSString *base64 = [bitmapRep base64EncodedStringWithOptions:0];
+
+  return @{
+    @"width" : @(CGImageGetWidth(videoFrameImage)),
+    @"height" : @(CGImageGetHeight(videoFrameImage)),
+    @"base64" : base64,
+    @"size" : @([bitmapRep length]),
+  };
 }
+
+VISION_EXPORT_FRAME_PROCESSOR(captureVideoFrame)
 
 @end
