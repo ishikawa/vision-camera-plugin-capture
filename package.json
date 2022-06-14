@@ -1,6 +1,6 @@
 {
   "name": "vision-camera-plugin-capture",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "A VisionCamera Frame Processor Plugin to capture video frame",
   "main": "lib/commonjs/index",
   "module": "lib/module/index",
