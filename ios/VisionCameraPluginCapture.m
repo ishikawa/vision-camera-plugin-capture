@@ -16,9 +16,16 @@ static inline id captureVideoFrame(Frame *frame, NSArray *arguments) {
   CVPixelBufferRef pixelBuffer = CMSampleBufferGetImageBuffer(frame.buffer);
   CGImageRef videoFrameImage = NULL;
 
-  if (VTCreateCGImageFromCVPixelBuffer(pixelBuffer, NULL, &videoFrameImage) !=
-      errSecSuccess) {
-    return [NSNull null];
+  {
+    CVPixelBufferLockBaseAddress(pixelBuffer, kCVPixelBufferLock_ReadOnly);
+
+    const OSStatus status = VTCreateCGImageFromCVPixelBuffer(pixelBuffer, NULL, &videoFrameImage);
+
+    CVPixelBufferUnlockBaseAddress(pixelBuffer, kCVPixelBufferLock_ReadOnly);
+
+    if (status != errSecSuccess) {
+      return [NSNull null];
+    }
   }
 
   // Rasterize
