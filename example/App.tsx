@@ -16,15 +16,15 @@ import {
 } from 'react-native-vision-camera';
 import { captureVideoFrame, CaptureResult } from 'vision-camera-plugin-capture';
 import { runOnJS, useSharedValue } from 'react-native-reanimated';
-import RNFS from 'react-native-fs';
 
 const App: React.FC = () => {
   const cameraDevices = useCameraDevices();
   const cameraDevice = cameraDevices.back;
   const [hasCameraPermission, setHasCameraPermission] = useState(false);
-  const [, setCaptureResult] = useState<CaptureResult | null>(null);
+  const [captureResult, setCaptureResult] = useState<CaptureResult | null>(
+    null
+  );
   const [captureCount, setCaptureCount] = useState<number>(0);
-  const [captureImagePath, setCaptureImagePath] = useState<string | null>(null);
 
   const disableCapture = useSharedValue(false);
 
@@ -69,12 +69,6 @@ const App: React.FC = () => {
   }, [disableCapture]);
 
   const onCapture = useCallback(async (result: CaptureResult) => {
-    const filename = Math.floor(Math.random() * 1000) + '.jpg';
-    const path = RNFS.TemporaryDirectoryPath + '/' + filename;
-
-    await RNFS.writeFile(path, result.base64, 'base64');
-
-    setCaptureImagePath(path);
     setCaptureResult(result);
     setCaptureCount((n) => n + 1);
   }, []);
@@ -108,18 +102,14 @@ const App: React.FC = () => {
           device={cameraDevice}
           isActive={true}
         >
-          {captureImagePath && (
+          {captureResult && (
             // Displaying image from data uri causes HTTPS error :-(
             // `nil host used in call to allowsSpecificHTTPSCertificateForHost`
-            /*
-            <Image
-              source={{ uri: 'data:image/jpeg;base64,' + captureResult.base64 }}
-              style={styles.captureImage}
-            />
-            */
             <View style={styles.captureImageContainer}>
               <Image
-                source={{ uri: captureImagePath }}
+                source={{
+                  uri: 'data:image/jpeg;base64,' + captureResult.base64,
+                }}
                 style={styles.captureImage}
               />
               <Text style={styles.captureCountText}>
@@ -149,6 +139,7 @@ const styles = StyleSheet.create({
     bottom: 0,
     borderWidth: 3,
     borderColor: 'white',
+    backgroundColor: 'black',
   },
   captureImage: {
     position: 'absolute',

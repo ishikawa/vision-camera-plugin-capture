@@ -12,7 +12,6 @@
   "dependencies": {
     "react": "17.0.2",
     "react-native": "0.68.2",
-    "react-native-fs": "^2.20.0",
     "react-native-reanimated": "^2.8.0",
     "react-native-vision-camera": "^2.13.5"
   },
