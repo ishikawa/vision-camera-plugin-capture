@@ -2,7 +2,9 @@ import 'react-native-reanimated';
 import React, { useCallback, useEffect, useState } from 'react';
 import {
   Alert,
+  View,
   Image,
+  Text,
   SafeAreaView,
   StatusBar,
   StyleSheet,
@@ -21,7 +23,9 @@ const App: React.FC = () => {
   const cameraDevice = cameraDevices.back;
   const [hasCameraPermission, setHasCameraPermission] = useState(false);
   const [, setCaptureResult] = useState<CaptureResult | null>(null);
+  const [captureCount, setCaptureCount] = useState<number>(0);
   const [captureImagePath, setCaptureImagePath] = useState<string | null>(null);
+
   const disableCapture = useSharedValue(false);
 
   // Camera permission
@@ -72,6 +76,7 @@ const App: React.FC = () => {
 
     setCaptureImagePath(path);
     setCaptureResult(result);
+    setCaptureCount((n) => n + 1);
   }, []);
 
   const frameProcessor = useFrameProcessor(
@@ -112,10 +117,15 @@ const App: React.FC = () => {
               style={styles.captureImage}
             />
             */
-            <Image
-              source={{ uri: captureImagePath }}
-              style={styles.captureImage}
-            />
+            <View style={styles.captureImageContainer}>
+              <Image
+                source={{ uri: captureImagePath }}
+                style={styles.captureImage}
+              />
+              <Text style={styles.captureCountText}>
+                Captured {captureCount} times
+              </Text>
+            </View>
           )}
         </Camera>
       ) : null}
@@ -131,7 +141,7 @@ const styles = StyleSheet.create({
   camera: {
     flex: 1,
   },
-  captureImage: {
+  captureImageContainer: {
     position: 'absolute',
     width: '50%',
     height: '50%',
@@ -139,6 +149,16 @@ const styles = StyleSheet.create({
     bottom: 0,
     borderWidth: 3,
     borderColor: 'white',
+  },
+  captureImage: {
+    position: 'absolute',
+    width: '100%',
+    height: '100%',
+  },
+  captureCountText: {
+    color: 'white',
+    fontSize: 18,
+    padding: 5,
   },
 });
 
