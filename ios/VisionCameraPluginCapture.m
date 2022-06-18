@@ -36,6 +36,8 @@ static inline id captureVideoFrame(Frame *frame, NSArray *arguments) {
           : UIImagePNGRepresentation(img);
   NSString *base64 = [bitmapRep base64EncodedStringWithOptions:0];
 
+  CGImageRelease(videoFrameImage);
+
   return @{
     @"width" : @(CGImageGetWidth(videoFrameImage)),
     @"height" : @(CGImageGetHeight(videoFrameImage)),
