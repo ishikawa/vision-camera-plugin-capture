@@ -21,6 +21,8 @@ target 'ExampleApp' do
 
   pod 'vision-camera-plugin-capture', :path => '../..'
 
+  pod 'RNFS', :path => '../node_modules/react-native-fs'
+
   target 'ExampleAppTests' do
     inherit! :complete
     # Pods for testing

@@ -14,14 +14,14 @@ import {
 } from 'react-native-vision-camera';
 import { captureVideoFrame, CaptureResult } from 'vision-camera-plugin-capture';
 import { runOnJS, useSharedValue } from 'react-native-reanimated';
+import RNFS from 'react-native-fs';
 
 const App: React.FC = () => {
   const cameraDevices = useCameraDevices();
   const cameraDevice = cameraDevices.back;
   const [hasCameraPermission, setHasCameraPermission] = useState(false);
-  const [captureResult, setCaptureResult] = useState<CaptureResult | null>(
-    null
-  );
+  const [, setCaptureResult] = useState<CaptureResult | null>(null);
+  const [captureImagePath, setCaptureImagePath] = useState<string | null>(null);
   const disableCapture = useSharedValue(false);
 
   // Camera permission
@@ -58,15 +58,26 @@ const App: React.FC = () => {
     })();
   }, []);
 
-  const enableCapture = useCallback(() => {
+  const reenableCapture = useCallback(() => {
     setTimeout(() => {
       disableCapture.value = false;
     }, 1000);
   }, [disableCapture]);
 
+  const onCapture = useCallback(async (result: CaptureResult) => {
+    const filename = Math.floor(Math.random() * 1000) + '.jpg';
+    const path = RNFS.TemporaryDirectoryPath + '/' + filename;
+
+    await RNFS.writeFile(path, result.base64, 'base64');
+
+    setCaptureImagePath(path);
+    setCaptureResult(result);
+  }, []);
+
   const frameProcessor = useFrameProcessor(
     (frame) => {
       'worklet';
+
       if (!disableCapture.value) {
         const value = captureVideoFrame(frame, {
           format: 'JPEG',
@@ -75,12 +86,12 @@ const App: React.FC = () => {
         if (value) {
           // Disable capture a while to prevent too many updates.
           disableCapture.value = true;
-          runOnJS(enableCapture)();
-          runOnJS(setCaptureResult)(value);
+          runOnJS(reenableCapture)();
+          runOnJS(onCapture)(value);
         }
       }
     },
-    [setCaptureResult, enableCapture]
+    [onCapture, reenableCapture]
   );
 
   return (
@@ -92,9 +103,17 @@ const App: React.FC = () => {
           device={cameraDevice}
           isActive={true}
         >
-          {captureResult && (
+          {captureImagePath && (
+            // Displaying image from data uri causes HTTPS error :-(
+            // `nil host used in call to allowsSpecificHTTPSCertificateForHost`
+            /*
             <Image
               source={{ uri: 'data:image/jpeg;base64,' + captureResult.base64 }}
+              style={styles.captureImage}
+            />
+            */
+            <Image
+              source={{ uri: captureImagePath }}
               style={styles.captureImage}
             />
           )}
