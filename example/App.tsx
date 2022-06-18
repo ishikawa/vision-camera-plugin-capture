@@ -46,6 +46,7 @@ const App: React.FC = () => {
 
       switch (newCameraPermission) {
         case 'authorized':
+          setHasCameraPermission(true);
           return;
         case 'denied':
           Alert.alert(
